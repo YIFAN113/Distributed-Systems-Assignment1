@@ -166,6 +166,18 @@ export class RestAPIStack extends cdk.Stack {
     },
   });
 
+  const updateMovieReviewFn = new lambdanode.NodejsFunction(this, "UpdateMovieReviewFn", {
+    architecture: lambda.Architecture.ARM_64,
+    runtime: lambda.Runtime.NODEJS_18_X,
+    entry: `${__dirname}/../lambdas/updateMovieReview.ts`, 
+    timeout: cdk.Duration.seconds(10),
+    memorySize: 128,
+    environment: {
+      TABLE_NAME: movieReviewsTable.tableName,
+      REGION: "eu-west-1",
+    },
+  });
+
 
         
         // Permissions 
@@ -178,6 +190,7 @@ export class RestAPIStack extends cdk.Stack {
         movieReviewsTable.grantReadData(getMovieReviewsFn);
         movieReviewsTable.grantWriteData(newMovieReviewFn);
         movieReviewsTable.grantReadData(getReviewsByMovieIdFn);
+        movieReviewsTable.grantReadWriteData(updateMovieReviewFn);
         const api = new apig.RestApi(this, "RestAPI", {
           description: "demo api",
           deployOptions: {
@@ -224,6 +237,9 @@ reviewsSubEndpoint.addMethod("POST", new apig.LambdaIntegration(newMovieReviewFn
 
 const movieReviewsSubEndpoint = movieEndpoint.addResource("reviews");
 movieReviewsSubEndpoint.addMethod("GET", new apig.LambdaIntegration(getReviewsByMovieIdFn, { proxy: true }));
+
+const singleReviewSubEndpoint = movieReviewsSubEndpoint.addResource("{reviewerName}");
+singleReviewSubEndpoint.addMethod("PUT", new apig.LambdaIntegration(updateMovieReviewFn));
  //       const reviewsEndpoint = api.root.addResource("reviews");
 //reviewsEndpoint.addMethod("GET", new apig.LambdaIntegration(getMovieReviewsFn, { proxy: true }));
 //reviewsEndpoint.addMethod('POST', new apig.LambdaIntegration(newMovieReviewFn));
