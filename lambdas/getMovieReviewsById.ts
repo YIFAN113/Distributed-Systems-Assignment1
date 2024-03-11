@@ -9,6 +9,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     console.log("Event: ", event);
     const movieId = event.pathParameters?.movieId;
     const minRating = event.queryStringParameters?.minRating;
+    const reviewerName = event.pathParameters?.reviewerName;
     if (!movieId) {
       return {
         statusCode: 400,
@@ -18,20 +19,29 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         body: JSON.stringify({ message: "Movie ID is required in the path" }),
       };
     }
-
     const queryInput: QueryCommandInput = {
         TableName: process.env.TABLE_NAME,
         KeyConditionExpression: "MovieId = :movieId",
         ExpressionAttributeValues: {
           ":movieId": parseInt(movieId),
-          ":minRating": minRating ? parseInt(minRating) : undefined,
+          ...(minRating ? { ":minRating": parseInt(minRating) } : {}),
+          ...(reviewerName ? { ":reviewerName": reviewerName } : {}),
         },
+        FilterExpression: '', 
     };
-  
-      if (minRating) {
-        queryInput.FilterExpression = 'Rating > :minRating';
+    
+    
+    if (minRating) {
+        queryInput.FilterExpression += (queryInput.FilterExpression ? ' and ' : '') + 'Rating > :minRating';
     }
-
+    
+    if (reviewerName) {
+        queryInput.FilterExpression += (queryInput.FilterExpression ? ' and ' : '') + 'Reviewername = :reviewerName';
+    }
+    
+    if (!queryInput.FilterExpression) {
+        delete queryInput.FilterExpression;
+    }
     const queryOutput = await ddbDocClient.send(new QueryCommand(queryInput));
 
     if (!queryOutput.Items || queryOutput.Items.length === 0) {
