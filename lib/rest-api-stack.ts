@@ -178,6 +178,16 @@ export class RestAPIStack extends cdk.Stack {
     },
   });
 
+  const getReviewsByYearFn = new lambdanode.NodejsFunction(this, "GetReviewsByYearFn", {
+    runtime: lambda.Runtime.NODEJS_18_X,
+    handler: 'handler',
+    entry: `${__dirname}/../lambdas/getReviewsByYear.ts`,
+    environment: {
+      TABLE_NAME: movieReviewsTable.tableName,
+      REGION: "eu-west-1",
+    },
+  });
+
 
         
         // Permissions 
@@ -191,6 +201,7 @@ export class RestAPIStack extends cdk.Stack {
         movieReviewsTable.grantWriteData(newMovieReviewFn);
         movieReviewsTable.grantReadData(getReviewsByMovieIdFn);
         movieReviewsTable.grantReadWriteData(updateMovieReviewFn);
+        movieReviewsTable.grantReadData(getReviewsByYearFn);
         const api = new apig.RestApi(this, "RestAPI", {
           description: "demo api",
           deployOptions: {
@@ -240,6 +251,8 @@ movieReviewsSubEndpoint.addMethod("GET", new apig.LambdaIntegration(getReviewsBy
 
 const singleReviewSubEndpoint = movieReviewsSubEndpoint.addResource("{reviewerName}");
 singleReviewSubEndpoint.addMethod("PUT", new apig.LambdaIntegration(updateMovieReviewFn));
+
+
  //       const reviewsEndpoint = api.root.addResource("reviews");
 //reviewsEndpoint.addMethod("GET", new apig.LambdaIntegration(getMovieReviewsFn, { proxy: true }));
 //reviewsEndpoint.addMethod('POST', new apig.LambdaIntegration(newMovieReviewFn));
