@@ -2,7 +2,7 @@
 
 __Name:__ Yifan Gu
 
-__Video demonstration:__ ..... URL of your Youtube video demonstration ....
+__Video demonstration:__ [https://youtu.be/7f5PV_X55V0](https://youtu.be/7f5PV_X55V0)
 
 This repository contains an implementation of a serverless REST API for the AWS platform. The CDK framework is used to provision its infrastructure. The API's domain context is movie reviews.
 
